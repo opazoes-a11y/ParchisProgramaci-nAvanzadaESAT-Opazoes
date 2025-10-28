@@ -199,7 +199,32 @@ IParcheesi::Movement jop_parcheesi::ApplyMovement(int piece_index, int player_in
 void jop_parcheesi::SendPieceHome(int piece_index, int player_index){
     for(int i=0; i<pieces_per_player; i++){
         if(players[player_index].player_pieces[i].piece_index==piece_index){
-            players[player_index].player_pieces[i].box_num==0;
+            players[player_index].player_pieces[i].box_num=0;
         }
     }
 }
+
+int* jop_parcheesi::ListMovementBoxes(int start, int count, int player_index) const{
+    for(int i=0; i<20; ++i){
+        boxlist[i] = -1;
+    }
+    int current = start;
+    int index = 0;
+
+    while(count > 0){
+
+        if(current == 76) break;
+        if(current==kFinishPoint[player_index]){
+            current = 69;
+        } else if(current == 68){
+            current = 1;
+        } else{
+            current++;
+        }
+        boxlist[index] = current;
+        index++;
+        count--;
+    }
+    return boxlist;
+}
+

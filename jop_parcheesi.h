@@ -55,4 +55,7 @@ public:
 
 protected:
     Player players[kMaxPlayers];
+    int* ListMovementBoxes(int start, int count, int player_index) const;
+    mutable int boxlist[20];
+
 };
