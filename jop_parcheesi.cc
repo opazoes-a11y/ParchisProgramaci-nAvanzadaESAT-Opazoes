@@ -77,6 +77,37 @@ bool jop_parcheesi::IsBoxSafe(int box_index) const{
     return false;
 }
 
+bool jop_parcheesi::IsBridge(int box_index) const{
+    int yellow_pieces, red_pieces, green_pieces, blue_pieces = 0;
+    for(int i=0; i<kSafePoints; ++i){
+        if(box_index == kSafePoint[i]) return false;
+    }
+    //Count how many pieces of each color
+    for(int i, j=0; i<kMaxPlayers, j<pieces_per_player; ++i, ++j){
+        if(players[i].player_pieces[j].box_num==box_index){
+            switch(players[i].player_pieces[j].color){
+                case IParcheesi::Color::Yellow:
+                    yellow_pieces++;
+                    break;
+                case IParcheesi::Color::Red:
+                    red_pieces++;
+                    break;
+                case IParcheesi::Color::Green:
+                    green_pieces++;
+                    break;
+                case IParcheesi::Color::Blue:
+                    blue_pieces++;
+                    break;
+            }
+        }
+    }
+    if(yellow_pieces >= 2 || red_pieces >= 2 || green_pieces >= 2 || blue_pieces >= 2){
+        return true;
+    } else {
+        return false;
+    }
+}
+
 jop_parcheesi::Color jop_parcheesi::ColorofPiece(int box_index, int box_piece_index) const{
     for(int i, j=0; i<kMaxPlayers, j<pieces_per_player; ++i, ++j){
         if(players[i].player_pieces[j].box_num==box_index) return players[i].player_pieces[j].color;
@@ -204,6 +235,16 @@ void jop_parcheesi::SendPieceHome(int piece_index, int player_index){
     }
 }
 
+int jop_parcheesi::CountPiecesOnBox(int box) const{
+    int count = 0;
+    for(int i, j=0; i<kMaxPlayers, j<pieces_per_player; ++i, ++j){
+        if(players[i].player_pieces[j].box_num==box){
+            count++;
+        }
+    }
+    return count;
+}
+
 int* jop_parcheesi::ListMovementBoxes(int start, int count, int player_index) const{
     for(int i=0; i<20; ++i){
         boxlist[i] = -1;
@@ -226,5 +267,19 @@ int* jop_parcheesi::ListMovementBoxes(int start, int count, int player_index) co
         count--;
     }
     return boxlist;
+}
+
+bool jop_parcheesi::CanMove(int start, int count, int player_index) const{
+    if(start==0){
+        //TODO: Fix start +1 = entry box
+        //If player didn`t roll 5 can`t move
+        if(count!=5) return false; 
+        //If there's a bridge on entry box
+        else if(IsBridge(EntryBox(player_index))) return false;
+    }
+    for(int i=1; i<=count; ++i){
+        //Check for bridges between the start and target box
+        if(IsBridge(start+i)) return false;
+    }
 }
 

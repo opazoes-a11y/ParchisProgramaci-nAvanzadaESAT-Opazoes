@@ -35,6 +35,8 @@ public:
     //Ctr for the Boxes array.
     jop_parcheesi();
 
+    int CountPiecesOnBox(int box) const;
+
     const int kSafePoint[kSafePoints] = {5, 12, 17, 22, 29, 34, 39, 46, 51, 56, 63, 68};
     const int kStartPoint[kMaxPlayers] = {5, 22, 39, 56};
     const int kFinishPoint[kMaxPlayers] = {68, 17, 34, 51};
@@ -44,11 +46,13 @@ public:
     int PiecesAtHome(int player_index) const override;
     int PiecesAtEnd(int player_index) const override;
     bool IsBoxSafe(int box_index) const override;
+    bool IsBridge(int box_index) const;
     // higher box_piece_index means the piece moved later
     Color ColorofPiece(int box_index, int box_piece_index) const override;
 
     Movement ApplyMovement(int piece_index, int player_index, int count) override;
     void SendPieceHome(int piece_index, int player_index) override;
+
 
     IParcheesi* Clone() const override;
     ~jop_parcheesi() = default;
@@ -57,5 +61,6 @@ protected:
     Player players[kMaxPlayers];
     int* ListMovementBoxes(int start, int count, int player_index) const;
     mutable int boxlist[20];
+    bool CanMove(int start, int count, int player_index) const;
 
 };
