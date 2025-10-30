@@ -50,7 +50,7 @@ int jop_parcheesi::ExitBox(int player_index) const{
 
 int jop_parcheesi::PiecesAtHome(int player_index) const{
     int HowManyAtHome = 0;
-    for(int i=0; IParcheesi::pieces_per_player; ++i){
+    for(int i=0; i<IParcheesi::pieces_per_player; ++i){
         if(players[player_index].player_pieces[i].box_num == 0){
             HowManyAtHome++;
         }
@@ -60,7 +60,7 @@ int jop_parcheesi::PiecesAtHome(int player_index) const{
 
 int jop_parcheesi::PiecesAtEnd(int player_index) const{
     int HowManyAtGoal = 0;
-    for(int i=0; IParcheesi::pieces_per_player; ++i){
+    for(int i=0; i< IParcheesi::pieces_per_player; ++i){
         if(players[player_index].player_pieces[i].box_num == ExitBox(player_index)){
             HowManyAtGoal++;
         }
@@ -78,29 +78,25 @@ bool jop_parcheesi::IsBoxSafe(int box_index) const{
 }
 
 bool jop_parcheesi::IsBridge(int box_index) const{
-    int yellow_pieces, red_pieces, green_pieces, blue_pieces = 0;
     for(int i=0; i<kSafePoints; ++i){
         if(box_index == kSafePoint[i]) return false;
     }
     //Count how many pieces of each color
-    for(int i, j=0; i<kMaxPlayers, j<pieces_per_player; ++i, ++j){
-        if(players[i].player_pieces[j].box_num==box_index){
-            switch(players[i].player_pieces[j].color){
-                case IParcheesi::Color::Yellow:
-                    yellow_pieces++;
-                    break;
-                case IParcheesi::Color::Red:
-                    red_pieces++;
-                    break;
-                case IParcheesi::Color::Green:
-                    green_pieces++;
-                    break;
-                case IParcheesi::Color::Blue:
-                    blue_pieces++;
-                    break;
+    int yellow_pieces = 0, red_pieces = 0, green_pieces = 0, blue_pieces = 0;
+
+    for (int i = 0; i < kMaxPlayers; ++i) {
+        for (int j = 0; j < pieces_per_player; ++j) {
+            if (players[i].player_pieces[j].box_num == box_index) {
+                switch (players[i].player_pieces[j].color) {
+                    case IParcheesi::Color::Yellow: yellow_pieces++; break;
+                    case IParcheesi::Color::Red:    red_pieces++;    break;
+                    case IParcheesi::Color::Green:  green_pieces++;  break;
+                    case IParcheesi::Color::Blue:   blue_pieces++;   break;
+                }
             }
         }
     }
+
     if(yellow_pieces >= 2 || red_pieces >= 2 || green_pieces >= 2 || blue_pieces >= 2){
         return true;
     } else {
@@ -109,8 +105,12 @@ bool jop_parcheesi::IsBridge(int box_index) const{
 }
 
 jop_parcheesi::Color jop_parcheesi::ColorofPiece(int box_index, int box_piece_index) const{
-    for(int i, j=0; i<kMaxPlayers, j<pieces_per_player; ++i, ++j){
-        if(players[i].player_pieces[j].box_num==box_index) return players[i].player_pieces[j].color;
+    for (int i = 0; i < kMaxPlayers; ++i) {
+        for (int j = 0; j < pieces_per_player; ++j) {
+            if (players[i].player_pieces[j].box_num == box_index) {
+                return players[i].player_pieces[j].color;
+            }
+        }
     }
     return IParcheesi::Color::None;
 }
@@ -235,11 +235,17 @@ void jop_parcheesi::SendPieceHome(int piece_index, int player_index){
     }
 }
 
+jop_parcheesi::IParcheesi* jop_parcheesi::Clone() const{
+    return new jop_parcheesi{*this};
+}
+
 int jop_parcheesi::CountPiecesOnBox(int box) const{
     int count = 0;
-    for(int i, j=0; i<kMaxPlayers, j<pieces_per_player; ++i, ++j){
-        if(players[i].player_pieces[j].box_num==box){
-            count++;
+    for (int i = 0; i < kMaxPlayers; ++i) {
+        for (int j = 0; j < pieces_per_player; ++j) {
+            if (players[i].player_pieces[j].box_num == box) {
+                ++count;
+            }
         }
     }
     return count;
@@ -281,5 +287,6 @@ bool jop_parcheesi::CanMove(int start, int count, int player_index) const{
         //Check for bridges between the start and target box
         if(IsBridge(start+i)) return false;
     }
+    return false;
 }
 

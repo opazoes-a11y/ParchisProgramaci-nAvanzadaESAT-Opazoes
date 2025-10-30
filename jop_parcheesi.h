@@ -7,13 +7,13 @@ public:
     static const int kMaxPlayers = 4;
     static const int kTotalBoxes = 68+1;
 
-    static struct Piece{
+    struct Piece{
         Color color;
         int piece_index;
         int box_num, turn, player_index;
     };
 
-    static struct Player{
+    struct Player{
         int player_index;
         Color color;
         Piece player_pieces[pieces_per_player];
@@ -57,8 +57,8 @@ public:
     IParcheesi* Clone() const override;
     ~jop_parcheesi() = default;
 
-protected:
     Player players[kMaxPlayers];
+protected:
     int* ListMovementBoxes(int start, int count, int player_index) const;
     mutable int boxlist[20];
     bool CanMove(int start, int count, int player_index) const;
