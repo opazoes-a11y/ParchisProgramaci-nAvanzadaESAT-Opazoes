@@ -42,6 +42,8 @@ class IParcheesi {
     // higher box_piece_index means the piece moved later
     virtual Color ColorofPiece(int box_index, int box_piece_index) const = 0;
 
+    virtual int PiecePosition(int player_index, int piece_index) const = 0;
+
     virtual Movement ApplyMovement(int piece_index, int player_index, int count) = 0;
     virtual void SendPieceHome(int piece_index, int player_index) = 0;
 

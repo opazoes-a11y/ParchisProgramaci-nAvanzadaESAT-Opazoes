@@ -115,6 +115,24 @@ jop_parcheesi::Color jop_parcheesi::ColorofPiece(int box_index, int box_piece_in
     return IParcheesi::Color::None;
 }
 
+bool jop_parcheesi::HasAnyLegalMove(int player_index, int count) const {
+    for (int i = 0; i < pieces_per_player; ++i) {
+        int pos = players[player_index].player_pieces[i].box_num;
+        if (CanMove(pos, count, player_index))
+            return true;
+    }
+    return false;
+}
+
+bool jop_parcheesi::IsInLane(int player_index, int box) const {
+    int start = kLaneStart[player_index];
+    return (box >= start) && (box < start + kLaneSize);
+}
+
+int jop_parcheesi::LaneEnd(int player_index) const {
+    return kLaneStart[player_index] + kLaneSize - 1;
+}
+
 IParcheesi::Movement jop_parcheesi::ApplyMovement(int piece_index, int player_index, int count) {
     Piece* moving_piece = nullptr;
     for (int i = 0; i < pieces_per_player; ++i) {
@@ -123,27 +141,34 @@ IParcheesi::Movement jop_parcheesi::ApplyMovement(int piece_index, int player_in
             break;
         }
     }
-    if (!moving_piece) return Movement::NoMoves;
+
+    if (!moving_piece) {
+        if (!HasAnyLegalMove(player_index, count))
+            return Movement::NoMoves;
+        return Movement::NoMoves;
+    }
 
     int current_box = moving_piece->box_num;
 
-    // home == box 0
     if (current_box == 0) {
-        if (count != 5)
-            return Movement::IllegalPieceAtHome; // Only if rolled a 5
+        if (count != 5) {
+            if (!HasAnyLegalMove(player_index, count))
+                return Movement::NoMoves;
+            return Movement::IllegalPieceAtHome;
+        }
 
         int entry = kStartPoint[player_index];
         int same_color_count = 0;
         bool rival_here = false;
         int rival_player = -1, rival_piece = -1;
 
-        // Check who's on the exit box
         for (int pl = 0; pl < kMaxPlayers; ++pl) {
             for (int p = 0; p < pieces_per_player; ++p) {
                 const Piece& piece = players[pl].player_pieces[p];
                 if (piece.box_num == entry) {
-                    if (pl == player_index) same_color_count++;
-                    else {
+                    if (pl == player_index) {
+                        same_color_count++;
+                    } else {
                         rival_here = true;
                         rival_player = pl;
                         rival_piece = p;
@@ -152,15 +177,18 @@ IParcheesi::Movement jop_parcheesi::ApplyMovement(int piece_index, int player_in
             }
         }
 
-        // Bridges
-        if (same_color_count >= 2)
+        if (same_color_count >= 2) {
+            if (!HasAnyLegalMove(player_index, count))
+                return Movement::NoMoves;
             return Movement::IllegalBridge;
+        }
 
-        // Check if there's a rival in safe box
-        if (rival_here && IsBoxSafe(entry))
+        if (rival_here && IsBoxSafe(entry)) {
+            if (!HasAnyLegalMove(player_index, count))
+                return Movement::NoMoves;
             return Movement::IllegalEntryBlocked;
+        }
 
-        // Eat rival if posisioned in no safe box
         if (rival_here && !IsBoxSafe(entry)) {
             players[rival_player].player_pieces[rival_piece].box_num = 0;
             moving_piece->box_num = entry;
@@ -168,23 +196,73 @@ IParcheesi::Movement jop_parcheesi::ApplyMovement(int piece_index, int player_in
             return Movement::Eat;
         }
 
-        // No rivals on target box
         moving_piece->box_num = entry;
         Boxes[entry].piecesIn++;
         return Movement::Normal;
     }
 
-    // If piece is already in the board
-    int destination = current_box + count;
+    if (IsInLane(player_index, current_box)) {
+        int destination = current_box + count;
+        int lane_end = LaneEnd(player_index);
 
+        if (destination > lane_end) {
+            if (!HasAnyLegalMove(player_index, count))
+                return Movement::NoMoves;
+            return Movement::IllegalPastEnd;
+        }
+
+        if (destination == lane_end) {
+            Boxes[current_box].piecesIn--;
+            moving_piece->box_num = destination;
+            Boxes[destination].piecesIn++;
+            return Movement::End;
+        }
+
+        Boxes[current_box].piecesIn--;
+        moving_piece->box_num = destination;
+        Boxes[destination].piecesIn++;
+        return Movement::Normal;
+    }
+
+    if (!CanMove(current_box, count, player_index)) {
+        if (!HasAnyLegalMove(player_index, count))
+            return Movement::NoMoves;
+        return Movement::IllegalPass;
+    }
+
+    int destination = current_box + count;
     if (destination > IParcheesi::board_size)
         destination = ((destination - 1) % IParcheesi::board_size) + 1;
 
-    // Check if reached exit box
-    if (destination == kFinishPoint[player_index])
-        return Movement::ReachExit;
+    if (destination == kFinishPoint[player_index]) {
+        int lane_start = kLaneStart[player_index];
+        Boxes[current_box].piecesIn--;
+        moving_piece->box_num = lane_start;
+        Boxes[lane_start].piecesIn++;
+        return Movement::Normal;
+    }
 
-    // Check moving box
+    if (current_box < kFinishPoint[player_index] &&
+        destination > kFinishPoint[player_index]) {
+
+        int steps_to_finish = kFinishPoint[player_index] - current_box;
+        int extra_steps = count - steps_to_finish;
+
+        int lane_pos = kLaneStart[player_index] + extra_steps - 1;
+        int lane_end = LaneEnd(player_index);
+
+        if (lane_pos > lane_end) {
+            if (!HasAnyLegalMove(player_index, count))
+                return Movement::NoMoves;
+            return Movement::IllegalPastEnd;
+        }
+
+        Boxes[current_box].piecesIn--;
+        moving_piece->box_num = lane_pos;
+        Boxes[lane_pos].piecesIn++;
+        return Movement::Normal;
+    }
+
     int same_color_count = 0;
     bool rival_here = false;
     int rival_player = -1, rival_piece = -1;
@@ -193,38 +271,52 @@ IParcheesi::Movement jop_parcheesi::ApplyMovement(int piece_index, int player_in
         for (int p = 0; p < pieces_per_player; ++p) {
             const Piece& piece = players[pl].player_pieces[p];
             if (piece.box_num == destination) {
-                if (pl == player_index) same_color_count++;
-                else {
-                    rival_here = true;
+                if (pl == player_index) {
+                    same_color_count++;
+                } else {
+                    rival_here  = true;
                     rival_player = pl;
-                    rival_piece = p;
+                    rival_piece  = p;
                 }
             }
         }
     }
 
-    // Check for bridges -> illegal move
-    if (same_color_count >= 2)
+    if (same_color_count >= 2) {
+        if (!HasAnyLegalMove(player_index, count))
+            return Movement::NoMoves;
         return Movement::IllegalBridge;
+    }
 
-    // Rival in safe box -> bloqued movement
-    if (rival_here && IsBoxSafe(destination))
+    int total_on_dest = CountPiecesOnBox(destination);
+    if (total_on_dest >= 2) {
+        if (!(rival_here && !IsBoxSafe(destination))) {
+            if (!HasAnyLegalMove(player_index, count))
+                return Movement::NoMoves;
+            return Movement::IllegalBoxFull;
+        }
+    }
+
+    if (rival_here && IsBoxSafe(destination)) {
+        if (!HasAnyLegalMove(player_index, count))
+            return Movement::NoMoves;
         return Movement::IllegalEntryBlocked;
+    }
 
-    // Rival in normal box -> eat
     if (rival_here && !IsBoxSafe(destination)) {
-        players[rival_player].player_pieces[rival_piece].box_num = 0; // rival a casa
+        Boxes[current_box].piecesIn--;
+        players[rival_player].player_pieces[rival_piece].box_num = 0;
         moving_piece->box_num = destination;
         Boxes[destination].piecesIn = 1;
         return Movement::Eat;
     }
 
-    // Normal move
     Boxes[current_box].piecesIn--;
     moving_piece->box_num = destination;
     Boxes[destination].piecesIn++;
     return Movement::Normal;
 }
+
 
 
 void jop_parcheesi::SendPieceHome(int piece_index, int player_index){
@@ -251,6 +343,10 @@ int jop_parcheesi::CountPiecesOnBox(int box) const{
     return count;
 }
 
+int jop_parcheesi::PiecePosition(int player_index, int piece_index) const {
+    return players[player_index].player_pieces[piece_index].box_num;
+}
+
 int* jop_parcheesi::ListMovementBoxes(int start, int count, int player_index) const{
     for(int i=0; i<20; ++i){
         boxlist[i] = -1;
@@ -275,18 +371,25 @@ int* jop_parcheesi::ListMovementBoxes(int start, int count, int player_index) co
     return boxlist;
 }
 
-bool jop_parcheesi::CanMove(int start, int count, int player_index) const{
-    if(start==0){
-        //TODO: Fix start +1 = entry box
-        //If player didn`t roll 5 can`t move
-        if(count!=5) return false; 
-        //If there's a bridge on entry box
-        else if(IsBridge(EntryBox(player_index))) return false;
+bool jop_parcheesi::CanMove(int start, int count, int player_index) const {
+    if (start == 0) {
+        if (count != 5) return false;
+        if (IsBridge(EntryBox(player_index))) return false;
+        return true;
     }
-    for(int i=1; i<=count; ++i){
-        //Check for bridges between the start and target box
-        if(IsBridge(start+i)) return false;
+
+    int current = start;
+    for (int step = 1; step <= count; ++step) {
+        int next = current + 1;
+        if (next > IParcheesi::board_size)
+            next = 1;
+
+        if (IsBridge(next)) {
+            return false;
+        }
+
+        current = next;
     }
-    return false;
+    return true;
 }
 

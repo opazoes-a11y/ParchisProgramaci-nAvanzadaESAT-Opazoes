@@ -1,9 +1,7 @@
 #pragma once
-#include "iparcheesi.h"
-#include "jop_parcheesi.h"
+#include "game.h"
 
-class jop_player : public IParcheesi{
-    int player_index;
-    Color color;
-    jop_parcheesi::Player player_pieces[pieces_per_player];
+class Player : public IPlayer {
+public:
+    int DecideMove(const IParcheesi& parchis, int player_index, int dice_roll) const override;
 };

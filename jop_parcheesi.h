@@ -29,6 +29,17 @@ public:
         Box();
         Box(int index);
     };
+    // cada jugador tiene 8 casillas de pasillo
+    static const int kLaneSize = 8;
+
+    // Start of private exit lane for player
+    // amarillo, azul, rojo, verde
+    const int kLaneStart[kMaxPlayers] = {
+        69,   // amarillo
+        77,   // azul
+        85,   // rojo
+        93    // verde
+    };
 
     Box Boxes[kTotalBoxes];
 
@@ -49,6 +60,10 @@ public:
     bool IsBridge(int box_index) const;
     // higher box_piece_index means the piece moved later
     Color ColorofPiece(int box_index, int box_piece_index) const override;
+    // Added so the player bot can know the pieces position
+    int PiecePosition(int player_index, int piece_index) const override;
+    bool IsInLane(int player_index, int box) const;
+    int LaneEnd(int player_index) const;
 
     Movement ApplyMovement(int piece_index, int player_index, int count) override;
     void SendPieceHome(int piece_index, int player_index) override;
@@ -58,7 +73,9 @@ public:
     ~jop_parcheesi() = default;
 
     Player players[kMaxPlayers];
+    
 protected:
+    bool HasAnyLegalMove(int player_index, int count) const;
     int* ListMovementBoxes(int start, int count, int player_index) const;
     mutable int boxlist[20];
     bool CanMove(int start, int count, int player_index) const;
