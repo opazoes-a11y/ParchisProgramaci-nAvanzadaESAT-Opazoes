@@ -62,7 +62,7 @@ public:
     Color ColorofPiece(int box_index, int box_piece_index) const override;
     // Added so the player bot can know the pieces position
     int PiecePosition(int player_index, int piece_index) const override;
-    bool IsInLane(int player_index, int box) const;
+    bool IsInLane(Piece piece, int player_index) const;
     int LaneEnd(int player_index) const;
 
     Movement ApplyMovement(int piece_index, int player_index, int count) override;

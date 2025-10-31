@@ -1,9 +1,11 @@
+#include <windows.h>
 #include "jop_parcheesi.h"
 #include "game.h"
 #include "jop_player.h"
-#include <windows.h>
 
 int main() {
+    SetConsoleOutputCP(CP_UTF8);
+    SetConsoleCP(CP_UTF8);
     jop_parcheesi board;
 
     static Player p0;

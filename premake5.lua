@@ -1,28 +1,55 @@
--- premake5.lua
 workspace "Parcheesi"
     architecture "x64"
     configurations { "Debug", "Release" }
     startproject "Parcheesi"
     location "build"
 
+-- ========================
+-- Project: ParcheesiPlayer
+-- ========================
+project "ParcheesiPlayer"
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++17"
+
+    files {
+        "jop_player.h",
+        "jop_player.cc"
+    }
+
+-- =======================
+-- Project: ParcheesiBoard
+-- =======================
+project "ParcheesiBoard"
+    kind "StaticLib"
+    language "C++"
+    cppdialect "C++17"
+
+    files {
+        "jop_parcheesi.h",
+        "jop_parcheesi.cc"
+    }
+
+-- =================
+-- Project: Parcheesi
+-- =================
 project "Parcheesi"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
-    staticruntime "off"         -- puedes poner "on" si quieres runtime estático
 
-    -- dónde dejar los ejecutables y los .obj
-    targetdir ("%{wks.location}/bin/%{cfg.buildcfg}")
-    objdir    ("%{wks.location}/bin-int/%{cfg.buildcfg}")
-
-    -- tus fuentes
     files {
         "**.h",
         "**.cc"
     }
 
-    -- si tuvieras carpetas de include externas, las pones aquí
-    -- includedirs { "include" }
+    links { "ParcheesiPlayer", "ParcheesiBoard" }
+
+    includedirs {
+        ".",           -- root folder (so headers like jop_player.h work)
+        "ParcheesiPlayer",
+        "ParcheesiBoard"
+    }
 
     filter "system:windows"
         systemversion "latest"

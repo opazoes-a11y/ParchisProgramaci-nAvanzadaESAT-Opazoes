@@ -12,7 +12,7 @@ Game::Game( IParcheesi& parcheesi, const IPlayer* players[])
  {
     printf("\n");
     printf("╔═══════════════════════════════════════════════════════╗\n");
-    printf("║        🎲  WELCOME TO PARCHEESI GAME!  🎲         ║\n");
+    printf("║        🎲  WELCOME TO PARCHEESI GAME!  🎲             ║\n");
     printf("╚═══════════════════════════════════════════════════════╝\n");
     printf("\n");
     
@@ -148,10 +148,10 @@ IParcheesi::Color Game::IsGameOver() const {
   if (active_players == 1) {
     printf("\n\n");
     printf("╔═══════════════════════════════════════════════════════╗\n");
-    printf("║             🏆  GAME OVER!  🏆                    ║\n");
+    printf("║             🏆  GAME OVER!  🏆                       ║\n");
     printf("║                                                       ║\n");
-    printf("║        %s PLAYER WINS!                 ║\n", colors[last_active_player]);
-    printf("║      Last player standing by elimination!            ║\n");
+    printf("║        %s PLAYER WINS!                                ║\n", colors[last_active_player]);
+    printf("║      Last player standing by elimination!             ║\n");
     printf("╚═══════════════════════════════════════════════════════╝\n");
     printf("\n");
     return static_cast<IParcheesi::Color>(last_active_player);

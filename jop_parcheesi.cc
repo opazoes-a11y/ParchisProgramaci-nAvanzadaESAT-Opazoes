@@ -61,7 +61,8 @@ int jop_parcheesi::PiecesAtHome(int player_index) const{
 int jop_parcheesi::PiecesAtEnd(int player_index) const{
     int HowManyAtGoal = 0;
     for(int i=0; i< IParcheesi::pieces_per_player; ++i){
-        if(players[player_index].player_pieces[i].box_num == ExitBox(player_index)){
+
+        if(IsInLane(players[player_index].player_pieces[i], player_index)){
             HowManyAtGoal++;
         }
     }
@@ -124,7 +125,8 @@ bool jop_parcheesi::HasAnyLegalMove(int player_index, int count) const {
     return false;
 }
 
-bool jop_parcheesi::IsInLane(int player_index, int box) const {
+bool jop_parcheesi::IsInLane(Piece piece, int player_index) const {
+    int box = piece.box_num;
     int start = kLaneStart[player_index];
     return (box >= start) && (box < start + kLaneSize);
 }
@@ -201,7 +203,7 @@ IParcheesi::Movement jop_parcheesi::ApplyMovement(int piece_index, int player_in
         return Movement::Normal;
     }
 
-    if (IsInLane(player_index, current_box)) {
+    if (IsInLane(*moving_piece, player_index)) {
         int destination = current_box + count;
         int lane_end = LaneEnd(player_index);
 
@@ -316,8 +318,6 @@ IParcheesi::Movement jop_parcheesi::ApplyMovement(int piece_index, int player_in
     Boxes[destination].piecesIn++;
     return Movement::Normal;
 }
-
-
 
 void jop_parcheesi::SendPieceHome(int piece_index, int player_index){
     for(int i=0; i<pieces_per_player; i++){
