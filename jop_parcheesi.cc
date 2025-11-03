@@ -136,6 +136,8 @@ int jop_parcheesi::LaneEnd(int player_index) const {
 }
 
 IParcheesi::Movement jop_parcheesi::ApplyMovement(int piece_index, int player_index, int count) {
+    if(piece_index==-1) return Movement::NoMoves;
+    
     Piece* moving_piece = nullptr;
     for (int i = 0; i < pieces_per_player; ++i) {
         if (players[player_index].player_pieces[i].piece_index == piece_index) {

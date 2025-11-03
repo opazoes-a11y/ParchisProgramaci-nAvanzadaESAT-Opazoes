@@ -2,6 +2,7 @@
 #include "jop_parcheesi.h"
 #include "game.h"
 #include "jop_player.h"
+#include "raq_player.h"
 
 int main() {
     SetConsoleOutputCP(CP_UTF8);
@@ -11,7 +12,7 @@ int main() {
     static Player p0;
     static Player p1;
     static Player p2;
-    static Player p3;
+    static RaqPlayer p3;
 
     const IPlayer* players[4] = { &p0, &p1, &p2, &p3 };
 

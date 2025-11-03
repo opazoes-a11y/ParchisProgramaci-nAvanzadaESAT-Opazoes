@@ -1,9 +1,13 @@
 #include "jop_player.h"
+#include "jop_parcheesi.h"
 #include <memory>
 
 int Player::DecideMove(const IParcheesi& parchis, int player_index, int dice_roll) const {
     const int base = player_index * IParcheesi::pieces_per_player;
-
+    if(parchis.PiecesAtHome(player_index)==4 && dice_roll!=5){
+        IParcheesi::Movement result = IParcheesi::Movement::NoMoves;
+        return -1;
+    }
     // Mandatory exit rule: if we rolled 5 and we have pieces at home,
     // we must try to bring one out.
     if (dice_roll == 5 && parchis.PiecesAtHome(player_index) > 0) {
@@ -30,7 +34,7 @@ int Player::DecideMove(const IParcheesi& parchis, int player_index, int dice_rol
 
         // If we are here, we rolled 5, we have pieces at home,
         // but none of them could actually enter (bridge or enemy on safe).
-        return base;
+        return -1;
     }
 
     // try all 4 pieces, simulate, and keep the best legal ones.
@@ -83,5 +87,5 @@ int Player::DecideMove(const IParcheesi& parchis, int player_index, int dice_rol
         return first_legal.piece_global;
 
     // If nothing was legal, let the board return NoMoves
-    return base;
+    return -1;
 }

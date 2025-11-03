@@ -4,10 +4,10 @@ workspace "Parcheesi"
     startproject "Parcheesi"
     location "build"
 
--- ========================
--- Project: ParcheesiPlayer
--- ========================
-project "ParcheesiPlayer"
+--------------------------------
+-- Static lib: jop_player
+--------------------------------
+project "jop_player"
     kind "StaticLib"
     language "C++"
     cppdialect "C++17"
@@ -17,9 +17,28 @@ project "ParcheesiPlayer"
         "jop_player.cc"
     }
 
--- =======================
--- Project: ParcheesiBoard
--- =======================
+    includedirs {
+        "."    -- root folder
+    }
+
+    filter "system:windows"
+        systemversion "latest"
+
+    filter "configurations:Debug"
+        defines { "DEBUG" }
+        runtime "Debug"
+        symbols "On"
+
+    filter "configurations:Release"
+        defines { "NDEBUG" }
+        runtime "Release"
+        optimize "On"
+
+    filter {}    -- clear filters
+
+--------------------------------
+-- Static lib: ParcheesiBoard
+--------------------------------
 project "ParcheesiBoard"
     kind "StaticLib"
     language "C++"
@@ -27,28 +46,60 @@ project "ParcheesiBoard"
 
     files {
         "jop_parcheesi.h",
-        "jop_parcheesi.cc"
+        "jop_parcheesi.cc",
+        "iparcheesi.h"
     }
 
--- =================
--- Project: Parcheesi
--- =================
+    includedirs {
+        "."
+    }
+
+    filter "system:windows"
+        systemversion "latest"
+
+    filter "configurations:Debug"
+        defines { "DEBUG" }
+        runtime "Debug"
+        symbols "On"
+
+    filter "configurations:Release"
+        defines { "NDEBUG" }
+        runtime "Release"
+        optimize "On"
+
+    filter {}    -- clear filters
+
+------------------------
+-- Executable: Parcheesi
+------------------------
 project "Parcheesi"
     kind "ConsoleApp"
     language "C++"
     cppdialect "C++17"
 
+    -- Solo los .cc del ejecutable
     files {
-        "**.h",
-        "**.cc"
+        "main.cc",
+        "game.cc"
     }
 
-    links { "ParcheesiPlayer", "ParcheesiBoard" }
-
+    -- Carpeta raíz para todos los .h (incluye zagerfe_player.h)
     includedirs {
-        ".",           -- root folder (so headers like jop_player.h work)
-        "ParcheesiPlayer",
-        "ParcheesiBoard"
+        "."
+    }
+
+    -- Donde está el .lib externo
+    libdirs {
+        "."   
+    }
+
+    -- Librerías a enlazar
+    links {
+        "jop_player",
+        "ParcheesiBoard",
+        "PlayerElena",
+        "ParcheesiRaqPlayer",
+        "PlayerGSH" 
     }
 
     filter "system:windows"
