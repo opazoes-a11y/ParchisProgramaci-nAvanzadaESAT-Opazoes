@@ -30,8 +30,6 @@ int Player::DecideMove(const IParcheesi& parchis, int player_index, int dice_rol
 
         // If we are here, we rolled 5, we have pieces at home,
         // but none of them could actually enter (bridge or enemy on safe).
-        // In that case, do not try to move any other piece: the rules say
-        // we had to enter, and we could not, so the move is effectively "no move".
         return base;
     }
 
