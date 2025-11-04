@@ -12,7 +12,7 @@ Game::Game( IParcheesi& parcheesi, const IPlayer* players[])
  {
     printf("\n");
     printf("╔═══════════════════════════════════════════════════════╗\n");
-    printf("║        🎲  WELCOME TO PARCHEESI GAME!  🎲             ║\n");
+    printf("║        🎲  WELCOME TO PARCHEESI GAME!  🎲         ║\n");
     printf("╚═══════════════════════════════════════════════════════╝\n");
     printf("\n");
     
@@ -35,10 +35,10 @@ Game::Game( IParcheesi& parcheesi, const IPlayer* players[])
 
 void Game::PlayTurn() {
   int player_index = static_cast<int>(current_player_);
-  const char* colors[] = {"🟡 YELLOW", "🔵 BLUE", "🔴 RED", "🟢 GREEN"};
-  
+  const char* player_colors[] = {"🟡 YELLOW", "🔵 BLUE", "🔴 RED", "🟢 GREEN"};
+
   printf("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
-  printf("  %s PLAYER'S TURN\n", colors[player_index]);
+  printf("  %s PLAYER'S TURN\n", player_colors[player_index]);
   printf("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
   
   int pieces_at_home = parcheesi_.PiecesAtHome(player_index);
@@ -73,7 +73,12 @@ void Game::PlayTurn() {
     // Let the player decide which piece to move
     const IPlayer& current_player = *(players_[player_index]);
     int piece_to_move = current_player.DecideMove(parcheesi_, player_index, movement);
-    printf("  ➡️  Moving piece #%d by %d spaces...\n", piece_to_move, movement);
+
+    if (piece_to_move == -1) {
+      printf("  ⏭️  Player decides to PASS (no valid moves)\n");
+    } else {
+      printf("  ➡️  Moving piece #%d by %d spaces...\n", piece_to_move, movement);
+    }
     
     IParcheesi::Movement result = parcheesi_.ApplyMovement(piece_to_move, player_index, movement);
     
@@ -97,7 +102,7 @@ void Game::PlayTurn() {
     
     if (result >= IParcheesi::Movement::IllegalPass) {
       // Invalid move - eliminate player immediately
-      printf("\n  ⛔⛔⛔ PLAYER %s ELIMINATED FOR ILLEGAL MOVE! ⛔⛔⛔\n", colors[player_index]);
+      printf("\n  ⛔⛔⛔ PLAYER %s ELIMINATED FOR ILLEGAL MOVE! ⛔⛔⛔\n", player_colors[player_index]);
       players_[player_index] = nullptr;
       break;
     }
@@ -110,7 +115,53 @@ void Game::PlayTurn() {
   } while(dice == 6);
   
   printf("\n  Turn complete!\n");
-  
+
+  // Check for victory conditions
+  // Check if current player won by getting all 4 pieces to the end
+  if (parcheesi_.PiecesAtEnd(player_index) == 4) {
+    printf("\n\n");
+    printf("╔═══════════════════════════════════════════════════════╗\n");
+    printf("║             🎉🏆  VICTORY!  🏆🎉                   ║\n");
+    printf("║                                                       ║\n");
+    printf("║        %s PLAYER WINS!                 ║\n", player_colors[player_index]);
+    printf("║                                                       ║\n");
+    printf("║           All 4 pieces reached the end!              ║\n");
+    printf("║                                                       ║\n");
+    printf("║               ⭐ CONGRATULATIONS! ⭐                  ║\n");
+    printf("╚═══════════════════════════════════════════════════════╝\n");
+    printf("              🎊🎊🎊🎊🎊🎊🎊🎊\n");
+    printf("              🎆  SPECTACULAR WIN!  🎆\n");
+    printf("              🎊🎊🎊🎊🎊🎊🎊🎊\n");
+    printf("\n");
+    return;
+  }
+
+  // Check if only one player remains after elimination
+  int active_players = 0;
+  int last_active_player = -1;
+  for (int i = 0; i < 4; ++i) {
+    if (players_[i]) {
+      active_players++;
+      last_active_player = i;
+    }
+  }
+
+  if (active_players == 1) {
+    printf("\n\n");
+    printf("╔═══════════════════════════════════════════════════════╗\n");
+    printf("║             🏆  GAME OVER!  🏆                    ║\n");
+    printf("║                                                       ║\n");
+    printf("║        %s PLAYER WINS!                 ║\n", player_colors[last_active_player]);
+    printf("║                                                       ║\n");
+    printf("║        Last player standing by elimination!          ║\n");
+    printf("║                                                       ║\n");
+    printf("║             ⭐ SURVIVOR VICTORY! ⭐                   ║\n");
+    printf("╚═══════════════════════════════════════════════════════╝\n");
+    printf("              💪  UNDEFEATED CHAMPION!  💪\n");
+    printf("\n");
+    return;
+  }
+
   // Advance to next player
   do {
     player_index = (player_index + 1) % 4;
@@ -134,7 +185,7 @@ IParcheesi::Color Game::IsGameOver() const {
       return static_cast<IParcheesi::Color>(player);
     }
   }
-  
+
   // Check if only one player remains not eliminated
   int active_players = 0;
   int last_active_player = -1;
@@ -144,19 +195,11 @@ IParcheesi::Color Game::IsGameOver() const {
       last_active_player = player;
     }
   }
-  
+
   if (active_players == 1) {
-    printf("\n\n");
-    printf("╔═══════════════════════════════════════════════════════╗\n");
-    printf("║             🏆  GAME OVER!  🏆                       ║\n");
-    printf("║                                                       ║\n");
-    printf("║        %s PLAYER WINS!                                ║\n", colors[last_active_player]);
-    printf("║      Last player standing by elimination!             ║\n");
-    printf("╚═══════════════════════════════════════════════════════╝\n");
-    printf("\n");
     return static_cast<IParcheesi::Color>(last_active_player);
   }
-  
+
   return IParcheesi::Color::None;
 }
 

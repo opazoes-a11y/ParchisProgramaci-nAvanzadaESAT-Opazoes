@@ -61,7 +61,7 @@ public:
     // higher box_piece_index means the piece moved later
     Color ColorofPiece(int box_index, int box_piece_index) const override;
     // Added so the player bot can know the pieces position
-    int PiecePosition(int player_index, int piece_index) const override;
+    int PiecePosition(int player_index, int piece_index) const;
     bool IsInLane(Piece piece, int player_index) const;
     int LaneEnd(int player_index) const;
 

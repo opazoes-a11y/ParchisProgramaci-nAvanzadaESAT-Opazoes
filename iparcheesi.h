@@ -28,8 +28,13 @@ class IParcheesi {
       IllegalMustBreakBridge,
     };
 
-    const static int board_size = 68;
+    // Types of boxes: 0 -> Home
+    // 1-68 -> normal board
+    // 69-75 -> exit path
+    // 76 -> End
     const static int all_boxes_board_size = 77;
+    const static int board_size = 68;
+
     const static int exit_size = 8;
     const static int null_piece = -1;
     const static int pieces_per_player = 4;
@@ -41,8 +46,6 @@ class IParcheesi {
     virtual bool IsBoxSafe(int box_index) const = 0;
     // higher box_piece_index means the piece moved later
     virtual Color ColorofPiece(int box_index, int box_piece_index) const = 0;
-
-    virtual int PiecePosition(int player_index, int piece_index) const = 0;
 
     virtual Movement ApplyMovement(int piece_index, int player_index, int count) = 0;
     virtual void SendPieceHome(int piece_index, int player_index) = 0;
